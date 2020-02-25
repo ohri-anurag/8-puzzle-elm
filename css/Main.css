@@ -1,0 +1,13 @@
+.cell, .zero {
+    border: 1px solid black;
+    width: 100px;
+    height: 100px;
+    display: inline-block;
+    margin: -1px -1px 0 0;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.zero {
+    background-color: red;
+}
