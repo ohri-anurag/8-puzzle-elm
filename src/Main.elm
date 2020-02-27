@@ -2,7 +2,7 @@ module Main exposing(..)
 
 import Basics exposing ((|>))
 import Browser
-import Html exposing (Html, button, div, text)
+import Html exposing (Html, button, div, span, text)
 import Html.Attributes exposing (attribute)
 import Html.Events exposing (onClick)
 import List exposing ((::), drop, indexedMap, isEmpty, map, sum, take)
@@ -19,6 +19,7 @@ type Operation = Up | Down | Left | Right | NoOp
 type alias Model =
   { model: List Int
   , zero: Int
+  , moves: Int
   }
 
 
@@ -26,6 +27,7 @@ initModel : Model
 initModel =
   { model = [1,2,3,4,5,6,7,8,0]
   , zero = 8
+  , moves = 0
   }
 
 
@@ -56,6 +58,7 @@ updateModel movement model =
   { model
   | model = swap model.zero newZero model.model
   , zero = newZero
+  , moves = model.moves + 1
   }
 
 
@@ -82,17 +85,28 @@ swap i j list =
 
 view : Model -> Html Operation
 view model =
-  model.model
-    |> indexedMap pair
-    |> rowify model.zero
-    |> div []
+  let
+    puzzle =
+      model.model
+        |> indexedMap pair
+        |> rowify model.zero
+        |> div []
+  in
+  div [attribute "class" "app"] [
+    div [attribute "class" "boardAndButtons"] [puzzle],
+    div [attribute "class" "moves"] [fromInt model.moves |> (++) "Moves: " |> text]
+  ]
 
 
 rowify : Int -> List (Int, Int) -> List (Html Operation)
 rowify zeroPos list =
   if isEmpty list
     then []
-    else div [] (map (divify zeroPos) (take 3 list)) :: rowify zeroPos (drop 3 list)
+    else
+      let
+        row = div [attribute "class" "row"] (map (divify zeroPos) (take 3 list))
+      in
+      row :: rowify zeroPos (drop 3 list)
 
 
 divify : Int -> (Int, Int) -> Html Operation
@@ -101,12 +115,16 @@ divify zeroPos (pos, num) =
     attribute "class" <|
       if num == 0
         then "zero"
-        else "cell",
+        else if isNeighbour pos zeroPos
+          then "neighbour"
+          else "cell",
     onClick <|
       if isNeighbour pos zeroPos
         then whichNeighbour pos zeroPos
         else NoOp
-  ] [ text (fromInt num) ]
+  ] [
+    span [attribute "class" "centreSpan"] [fromInt num |> text]
+  ]
 
 
 isNeighbour : Int -> Int -> Bool
@@ -123,4 +141,3 @@ whichNeighbour pos zeroPos =
       else if pos - zeroPos == 1
         then Right
         else Down
-
