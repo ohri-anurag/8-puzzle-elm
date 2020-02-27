@@ -5,17 +5,33 @@ import Browser
 import Html exposing (Html, button, div, span, text)
 import Html.Attributes exposing (attribute)
 import Html.Events exposing (onClick)
-import List exposing ((::), drop, indexedMap, isEmpty, map, sum, take)
+import List exposing ((::), drop, filter, indexedMap, isEmpty, length, map, range, sum, take)
+import Random exposing (generate)
+import Random.List exposing (shuffle)
 import String exposing (fromInt)
 import Tuple exposing (pair)
 
+
+--MAIN
 main =
-  Browser.sandbox { init = initModel, update = update, view = view }
+  Browser.element
+    { init = initModel
+    , update = update
+    , subscriptions = subscriptions
+    , view = view
+    }
 
 
-type Operation = Up | Down | Left | Right | NoOp
+type Operation
+  = Up
+  | Down
+  | Left
+  | Right
+  | NoOp
+  | ShuffledList (List Int)
 
 
+-- MODEL
 type alias Model =
   { model: List Int
   , zero: Int
@@ -23,31 +39,106 @@ type alias Model =
   }
 
 
-initModel : Model
-initModel =
-  { model = [1,2,3,4,5,6,7,8,0]
-  , zero = 8
-  , moves = 0
-  }
+initModel : () -> (Model, Cmd Operation)
+initModel _ =
+  let
+    list = range 0 8
+  in
+  ( { model = list
+    , zero = 8
+    , moves = 0
+    }
+  , generate ShuffledList (shuffle list)
+  )
 
 
-update : Operation -> Model -> Model
+-- UPDATE
+update : Operation -> Model -> (Model, Cmd Operation)
 update msg model =
   case msg of
     Up ->
-      updateModel (-3) model
+      (updateModel (-3) model, Cmd.none)
 
     Down ->
-      updateModel 3 model
+      (updateModel 3 model, Cmd.none)
 
     Left ->
-      updateModel (-1) model
+      (updateModel (-1) model, Cmd.none)
 
     Right ->
-      updateModel 1 model
+      (updateModel 1 model, Cmd.none)
 
     NoOp ->
-      model
+      (model, Cmd.none)
+
+    ShuffledList list ->
+      let
+        newList = swapIfNecessary list
+      in
+      (
+        { model
+        | model = newList
+        , zero = findZeroIndex newList}
+      , Cmd.none
+      )
+
+
+swapIfNecessary : List Int -> List Int
+swapIfNecessary list =
+  let
+    zeroPos = findZeroIndex list
+  in
+  if isSolvable list
+    then list
+    else if zeroPos > 1
+      then swap 0 1 list
+      else if zeroPos == 0
+        then swap 1 2 list
+        else swap 0 2 list
+
+
+isSolvable : List Int -> Bool
+isSolvable list =
+  let
+    inversions (x, xs) =
+      filter ((>) x) xs
+        |> length
+
+    totalInversions =
+      filter ((<) 0) list
+        |> tails
+        |> map inversions
+        |> sum
+  in
+  modBy totalInversions 2 == 0
+
+
+tails : List a -> List (a, List a)
+tails xs =
+  case xs of
+    [] ->
+      []
+
+    (x::rest) ->
+      (x, rest) :: tails rest
+
+
+findZeroIndex : List Int -> Int
+findZeroIndex list =
+  let
+    helper xs =
+      case xs of
+        [] ->
+          0
+
+        ((a,b)::rest) ->
+          if b == 0
+            then a
+            else helper rest
+
+  in
+  indexedMap pair list
+    |> helper
 
 
 updateModel : Int -> Model -> Model
@@ -83,6 +174,14 @@ swap i j list =
           else n
       )
 
+
+-- SUBSCRIPTIONS
+subscriptions : Model -> Sub Operation
+subscriptions model =
+  Sub.none
+
+
+-- VIEW
 view : Model -> Html Operation
 view model =
   let
