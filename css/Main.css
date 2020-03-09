@@ -3,6 +3,53 @@
     margin: 0;
 }
 
+
+/* First Page CSS*/
+.firstPage, .secondPage, .lastPage {
+  background-color: #e6e6fa;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  display: flex;
+}
+
+.firstPage span {
+  font-size: 128px;
+  margin: auto;
+}
+
+.secondPage {
+  flex-direction: column;
+}
+
+.imagesDiv {
+  display: flex;
+  flex-direction: column;
+  margin: auto;
+}
+
+.images, .helperText, .nextButton {
+  margin: auto;
+  display: flex;
+}
+
+.images img {
+  margin: auto;
+}
+
+.helperText {
+  padding: 30px 0px;
+  font-size: 18px;
+}
+
+.nextButton {
+  font-size: 32px;
+}
+
+.lastPage {}
+
+/* App Page CSS*/
 .cell, .neighbour, .zero {
     border: 1px solid black;
     width: 100px;
@@ -39,6 +86,10 @@
 .moves {
     font-size: 24px;
     margin: auto;
+}
+
+.finished {
+  color: red;
 }
 
 .boardAndButtons{

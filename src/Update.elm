@@ -9,113 +9,149 @@ import Random.List exposing (shuffle)
 import Tuple exposing (pair)
 
 import Helper exposing (last, tails)
-import Model exposing (Action(..), Click(..), Model, Movement(..), Operation(..))
+import Model exposing (..)
 
 
 update : Operation -> Model -> (Model, Cmd Operation)
 update msg model =
-  case msg of
-    Game movement ->
-      updateMovement movement model
+  case model of
+    Introduction page ->
+      case msg of
+        IntroAction iaClick ->
+          updatePage iaClick page
 
-    Button click ->
-      updateClick click model
+        _ ->
+          (model, Cmd.none)
 
-    Command action ->
-      updateAction action model
+    State appState ->
+      case msg of
+        Game movement ->
+          updateMovement movement appState
 
-    NoOp ->
-      (model, Cmd.none)
+        Button click ->
+          updateClick click appState
+
+        Command action ->
+          updateAction action appState
+
+        _ ->
+          (model, Cmd.none)
 
 
-updateMovement : Movement -> Model -> (Model, Cmd Operation)
-updateMovement movement model =
-  let
-    updateModel movementIndex =
+updatePage : IAClick -> Page -> (Model, Cmd Operation)
+updatePage iaClick page =
+  case iaClick of
+    FirstPageDone ->
+      (Introduction SecondPage, Cmd.none)
+
+    SecondPageDone ->
+      (Introduction LastPage, Cmd.none)
+
+    LastPageDone ->
       let
-        newZero = model.board.zero + movementIndex
+        list = range 0 8
+      in
+      ( State
+        { board =
+          { entries = list
+          , zero = 0
+          }
+        , moves = 0
+        , history = []
+        }
+      , shuffle list
+          |> generate (ShuffledList >> Command)
+      )
+
+
+updateMovement : Movement -> AppState -> (Model, Cmd Operation)
+updateMovement movement appState =
+  let
+    updateState movementIndex =
+      let
+        newZero = appState.board.zero + movementIndex
         newBoard =
-          { entries = swap model.board.zero newZero model.board.entries
+          { entries = swap appState.board.zero newZero appState.board.entries
           , zero = newZero
           }
       in
-      { model
+      { appState
       | board = newBoard
-      , moves = model.moves + 1
-      , history = model.board :: model.history
-      }
+      , moves = appState.moves + 1
+      , history = appState.board :: appState.history
+      } |> State
   in
   case movement of
     Up ->
-      (updateModel (-3), Cmd.none)
+      (updateState (-3), Cmd.none)
 
     Down ->
-      (updateModel 3, Cmd.none)
+      (updateState 3, Cmd.none)
 
     Left ->
-      (updateModel (-1), Cmd.none)
+      (updateState (-1), Cmd.none)
 
     Right ->
-      (updateModel 1, Cmd.none)
+      (updateState 1, Cmd.none)
 
 
-updateClick : Click -> Model -> (Model, Cmd Operation)
-updateClick click model =
+updateClick : Click -> AppState -> (Model, Cmd Operation)
+updateClick click appState =
   case click of
     Undo ->
-      case model.history of
+      case appState.history of
         (b :: bs) ->
           (
-            { model
+            { appState
             | board = b
-            , moves = model.moves - 1
+            , moves = appState.moves - 1
             , history = bs
-            }
+            } |> State
           , Cmd.none
           )
 
         [] ->
-          (model, Cmd.none)
+          (State appState, Cmd.none)
 
     Reset ->
-      case last model.history of
+      case last appState.history of
         Nothing ->
-          (model, Cmd.none)
+          (State appState, Cmd.none)
 
         Just b ->
           (
-            { model
+            { appState
             | board = b
             , moves = 0
             , history = []
-            }
+            } |> State
           , Cmd.none
           )
 
     NewPuzzle ->
-      ( model
+      ( State appState
       , range 0 8
           |> shuffle
           |> generate (ShuffledList >> Command)
       )
 
 
-updateAction : Action -> Model -> (Model, Cmd Operation)
-updateAction action model =
+updateAction : Action -> AppState -> (Model, Cmd Operation)
+updateAction action appState =
   case action of
     ShuffledList list ->
       let
         newList = swapIfNecessary list
       in
       (
-        { model
+        { appState
         | board =
           { entries = newList
           , zero = findZeroIndex newList
           }
         , moves = 0
         , history = []
-        }
+        } |> State
       , Cmd.none
       )
 

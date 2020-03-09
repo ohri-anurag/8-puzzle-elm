@@ -1,11 +1,4 @@
-module Model exposing
-    ( Action(..)
-    , Click(..)
-    , Operation(..)
-    , Model
-    , Movement(..)
-    , initModel
-    )
+module Model exposing (..)
 
 
 import List exposing (range)
@@ -14,11 +7,17 @@ import Random.List exposing (shuffle)
 
 
 type Operation
-  = Game Movement
+  = IntroAction IAClick
+  | Game Movement
   | Button Click
   | Command Action
   | NoOp
 
+
+type IAClick
+  = FirstPageDone
+  | SecondPageDone
+  | LastPageDone
 
 
 type Movement
@@ -37,8 +36,20 @@ type Click
 type Action
   = ShuffledList (List Int)
 
+
 -- MODEL
-type alias Model =
+type Model
+  = Introduction Page
+  | State AppState
+
+
+type Page
+  = FirstPage
+  | SecondPage
+  | LastPage
+
+
+type alias AppState =
   { board: Board
   , moves: Int
   , history: List Board
@@ -60,10 +71,6 @@ initModel _ =
       , zero = 8
       }
   in
-  ( { board = board
-    , moves = 0
-    , history = []
-    }
-  , shuffle list
-      |> generate (ShuffledList >> Command)
+  ( Introduction FirstPage
+  , Cmd.none
   )
