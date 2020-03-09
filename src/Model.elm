@@ -1,6 +1,9 @@
 module Model exposing
-    ( Operation(..)
+    ( Action(..)
+    , Click(..)
+    , Operation(..)
     , Model
+    , Movement(..)
     , initModel
     )
 
@@ -11,16 +14,28 @@ import Random.List exposing (shuffle)
 
 
 type Operation
+  = Game Movement
+  | Button Click
+  | Command Action
+  | NoOp
+
+
+
+type Movement
   = Up
   | Down
   | Left
   | Right
-  | NoOp
-  | ShuffledList (List Int)
-  | Undo
+
+
+type Click
+  = Undo
   | Reset
   | NewPuzzle
 
+
+type Action
+  = ShuffledList (List Int)
 
 -- MODEL
 type alias Model =
@@ -49,5 +64,6 @@ initModel _ =
     , moves = 0
     , history = []
     }
-  , generate ShuffledList (shuffle list)
+  , shuffle list
+      |> generate (ShuffledList >> Command)
   )

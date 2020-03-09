@@ -9,43 +9,59 @@ import Random.List exposing (shuffle)
 import Tuple exposing (pair)
 
 import Helper exposing (last, tails)
-import Model exposing (Model, Operation(..))
+import Model exposing (Action(..), Click(..), Model, Movement(..), Operation(..))
 
 
 update : Operation -> Model -> (Model, Cmd Operation)
 update msg model =
   case msg of
-    Up ->
-      (updateModel (-3) model, Cmd.none)
+    Game movement ->
+      updateMovement movement model
 
-    Down ->
-      (updateModel 3 model, Cmd.none)
+    Button click ->
+      updateClick click model
 
-    Left ->
-      (updateModel (-1) model, Cmd.none)
-
-    Right ->
-      (updateModel 1 model, Cmd.none)
+    Command action ->
+      updateAction action model
 
     NoOp ->
       (model, Cmd.none)
 
-    ShuffledList list ->
-      let
-        newList = swapIfNecessary list
-      in
-      (
-        { model
-        | board =
-          { entries = newList
-          , zero = findZeroIndex newList
-          }
-        , moves = 0
-        , history = []
-        }
-      , Cmd.none
-      )
 
+updateMovement : Movement -> Model -> (Model, Cmd Operation)
+updateMovement movement model =
+  let
+    updateModel movementIndex =
+      let
+        newZero = model.board.zero + movementIndex
+        newBoard =
+          { entries = swap model.board.zero newZero model.board.entries
+          , zero = newZero
+          }
+      in
+      { model
+      | board = newBoard
+      , moves = model.moves + 1
+      , history = model.board :: model.history
+      }
+  in
+  case movement of
+    Up ->
+      (updateModel (-3), Cmd.none)
+
+    Down ->
+      (updateModel 3, Cmd.none)
+
+    Left ->
+      (updateModel (-1), Cmd.none)
+
+    Right ->
+      (updateModel 1, Cmd.none)
+
+
+updateClick : Click -> Model -> (Model, Cmd Operation)
+updateClick click model =
+  case click of
     Undo ->
       case model.history of
         (b :: bs) ->
@@ -80,24 +96,28 @@ update msg model =
       ( model
       , range 0 8
           |> shuffle
-          |> generate ShuffledList
+          |> generate (ShuffledList >> Command)
       )
 
 
-updateModel : Int -> Model -> Model
-updateModel movement model =
-  let
-    newZero = model.board.zero + movement
-    newBoard =
-      { entries = swap model.board.zero newZero model.board.entries
-      , zero = newZero
-      }
-  in
-  { model
-  | board = newBoard
-  , moves = model.moves + 1
-  , history = model.board :: model.history
-  }
+updateAction : Action -> Model -> (Model, Cmd Operation)
+updateAction action model =
+  case action of
+    ShuffledList list ->
+      let
+        newList = swapIfNecessary list
+      in
+      (
+        { model
+        | board =
+          { entries = newList
+          , zero = findZeroIndex newList
+          }
+        , moves = 0
+        , history = []
+        }
+      , Cmd.none
+      )
 
 
 swapIfNecessary : List Int -> List Int

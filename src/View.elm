@@ -10,7 +10,7 @@ import String exposing (fromInt)
 import Tuple exposing (pair)
 
 
-import Model exposing (Model, Operation(..))
+import Model exposing (Action(..), Click(..), Model, Movement(..), Operation(..))
 
 
 view : Model -> Html Operation
@@ -25,15 +25,15 @@ view model =
     newButton =
       div
         [ attribute "class" "new"
-        , onClick NewPuzzle]
+        , onClick (NewPuzzle |> Button)]
         [
           span [attribute "class" "button"] [text "New Puzzle"]
         ]
 
     undoResetButton =
       div [attribute "class" "undoReset"]
-        [ div [attribute "class" "button", onClick Undo] [text "Undo"]
-        , div [attribute "class" "button", onClick Reset] [text "Reset"]
+        [ div [attribute "class" "button", onClick (Undo |> Button)] [text "Undo"]
+        , div [attribute "class" "button", onClick (Reset |> Button)] [text "Reset"]
         ]
   in
   div [attribute "class" "app"]
@@ -68,7 +68,7 @@ divify zeroPos (pos, num) =
           else "cell",
     onClick <|
       if isNeighbour pos zeroPos
-        then whichNeighbour pos zeroPos
+        then whichNeighbour pos zeroPos |> Game
         else NoOp
   ] [
     span [attribute "class" "centreSpan"] [fromInt num |> text]
@@ -80,7 +80,7 @@ isNeighbour pos1 pos2 =
   abs(pos1 - pos2) == 1 || abs(pos1 - pos2) == 3
 
 
-whichNeighbour : Int -> Int -> Operation
+whichNeighbour : Int -> Int -> Movement
 whichNeighbour pos zeroPos =
   if pos - zeroPos == -3
     then Up
