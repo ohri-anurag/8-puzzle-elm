@@ -33,6 +33,7 @@
 
 .row {
     display: flex;
+    margin: auto;
 }
 
 .moves {
@@ -41,6 +42,28 @@
 }
 
 .boardAndButtons{
+    margin: auto;
+    display: flex;
+    width: 100%;
+}
+
+.new, .undoReset, .puzzle {
+    margin: auto;
+    width: 33%;
+    text-align: center;
+    font-size: 32px;
+}
+
+.puzzle {
+    display: flex;
+    flex-direction: column;
+}
+
+.undoReset {
+    display: flex;
+}
+
+.undoReset div {
     margin: auto;
 }
 
@@ -51,4 +74,17 @@
     width: 100%;
     height: 100%;
     background-color: #e6e6fa;
+}
+
+.button {
+    cursor: pointer;
+    color: black;
+    background-color: #e6e6fa;
+    transition: color 500ms, background-color 500ms;
+    padding: 10px;
+}
+
+.button:hover {
+    color: #e6e6fa;
+    background-color: black;
 }
