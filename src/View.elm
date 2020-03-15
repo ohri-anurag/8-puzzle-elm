@@ -170,7 +170,7 @@ divify zeroPos (pos, num) =
 
 isNeighbour : Int -> Int -> Bool
 isNeighbour pos1 pos2 =
-  abs(pos1 - pos2) == 1 || abs(pos1 - pos2) == 3
+  (abs(pos1 - pos2) == 1 && pos1 // 3 == pos2 // 3) || abs(pos1 - pos2) == 3
 
 
 whichNeighbour : Int -> Int -> Movement
